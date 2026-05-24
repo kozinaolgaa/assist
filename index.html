@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ассист — AI помощник</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500&family=Golos+Text:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2ee;
+  --surface: #ffffff;
+  --surface2: #f0ece6;
+  --border: #e2dcd4;
+  --accent: #1a1a1a;
+  --accent2: #5b6af0;
+  --accent3: #e85d4a;
+  --accent4: #2ecc8f;
+  --text: #1a1a1a;
+  --text2: #6b6560;
+  --text3: #a8a29c;
+  --shadow: 0 2px 16px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  --radius: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-serif; font-weight:300; min-height:100vh; overflow-x:hidden; }
+.app { display:grid; grid-template-columns:72px 1fr; min-height:100vh; }
+.sidebar { background:var(--accent); display:flex; flex-direction:column; align-items:center; padding:20px 0; gap:4px; position:fixed; top:0; left:0; width:72px; height:100vh; z-index:100; }
+.logo-mark { font-family:'Unbounded',sans-serif; font-size:18px; font-weight:400; color:#fff; margin-bottom:24px; letter-spacing:-1px; }
+.logo-mark span { color:#c8f064; }
+.nav-btn { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; font-size:20px; color:rgba(255,255,255,0.4); position:relative; }
+.nav-btn:hover { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); }
+.nav-btn.active { background:rgba(255,255,255,0.15); color:#fff; }
+.nav-btn .badge { position:absolute; top:6px; right:6px; width:16px; height:16px; background:#c8f064; color:#000; border-radius:50%; font-size:9px; font-weight:500; display:flex; align-items:center; justify-content:center; font-family:'Golos Text',sans-serif; }
+.nav-tooltip { position:absolute; left:60px; background:var(--accent); color:#fff; font-size:12px; padding:6px 10px; border-radius:8px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 0.2s; font-family:'Golos Text',sans-serif; }
+.nav-btn:hover .nav-tooltip { opacity:1; }
+.main { margin-left:72px; min-height:100vh; }
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 32px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+.topbar-title { font-family:'Unbounded',sans-serif; font-size:14px; font-weight:400; letter-spacing:-0.3px; }
+.topbar-actions { display:flex; align-items:center; gap:12px; }
+.settings-btn { display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; font-size:13px; color:var(--text2); cursor:pointer; transition:all 0.2s; font-family:'Golos Text',sans-serif; }
+.settings-btn:hover { border-color:var(--accent2); color:var(--accent2); }
+.content { padding:32px; }
+.page { display:none; }
+.page.active { display:block; animation:slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; }
+.page-title { font-family:'Unbounded',sans-serif; font-size:24px; font-weight:300; letter-spacing:-0.5px; }
+.page-sub { font-size:13px; color:var(--text3); margin-top:4px; }
+.btn { display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border-radius:12px; font-size:14px; font-family:'Golos Text',sans-serif; font-weight:400; cursor:pointer; border:none; transition:all 0.2s; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:#333; transform:translateY(-1px); box-shadow:var(--shadow); }
+.btn-secondary { background:var(--surface); border:1px solid var(--border); color:var(--text2); }
+.btn-secondary:hover { border-color:var(--accent); color:var(--text); }
+.btn:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+.btn-sm { padding:7px 14px; font-size:12px; border-radius:8px; }
+.analyze-hero { background:var(--accent); border-radius:24px; padding:36px; margin-bottom:24px; position:relative; overflow:hidden; }
+.analyze-hero::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; border-radius:50%; background:rgba(255,255,255,0.04); }
+.analyze-hero h2 { font-family:'Unbounded',sans-serif; font-size:20px; font-weight:300; color:#fff; margin-bottom:6px; letter-spacing:-0.3px; }
+.analyze-hero p { font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:20px; }
+.analyze-textarea { width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:14px; color:#fff; font-family:'Golos Text',sans-serif; font-size:14px; font-weight:300; line-height:1.7; padding:16px 18px; resize:vertical; min-height:130px; outline:none; transition:border-color 0.2s; }
+.analyze-textarea:focus { border-color:rgba(200,240,100,0.4); }
+.analyze-textarea::placeholder { color:rgba(255,255,255,0.25); }
+.analyze-footer { display:flex; align-items:center; justify-content:space-between; margin-top:14px; }
+.analyze-hint { font-size:12px; color:rgba(255,255,255,0.3); }
+.btn-analyze { background:#c8f064; color:#000; border:none; padding:11px 24px; border-radius:12px; font-family:'Golos Text',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; }
+.btn-analyze:hover { background:#d4f570; transform:translateY(-1px); box-shadow:0 4px 20px rgba(200,240,100,0.3); }
+.btn-analyze:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+.results-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.result-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:all 0.2s; }
+.result-card:hover { border-color:var(--accent2); transform:translateY(-2px); box-shadow:var(--shadow); }
+.result-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.result-icon.cal { background:rgba(91,106,240,0.1); }
+.result-icon.task { background:rgba(46,204,143,0.1); }
+.result-icon.rem { background:rgba(232,93,74,0.1); }
+.result-count { font-family:'Unbounded',sans-serif; font-size:24px; font-weight:300; line-height:1; }
+.result-label { font-size:12px; color:var(--text3); margin-top:3px; }
+.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.cal-nav { display:flex; align-items:center; gap:16px; }
+.cal-month-label { font-family:'Unbounded',sans-serif; font-size:16px; font-weight:300; }
+.cal-nav-btn { width:36px; height:36px; border-radius:10px; border:1px solid var(--border); background:var(--surface); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--text2); transition:all 0.15s; }
+.cal-nav-btn:hover { border-color:var(--accent); color:var(--text); }
+.cal-body { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.cal-days-header { display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1px solid var(--border); }
+.cal-day-name { text-align:center; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); padding:12px 0; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+.cal-cell { min-height:90px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:8px; cursor:pointer; transition:background 0.15s; position:relative; }
+.cal-cell:nth-child(7n) { border-right:none; }
+.cal-cell:hover { background:var(--surface2); }
+.cal-cell.other-month .cal-date { color:var(--text3); }
+.cal-cell.today .cal-date { background:var(--accent); color:#fff; border-radius:8px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; }
+.cal-date { font-size:13px; color:var(--text2); margin-bottom:4px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; }
+.cal-event-chip { font-size:10px; padding:2px 7px; border-radius:6px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+.cal-event-chip.meeting { background:rgba(91,106,240,0.12); color:var(--accent2); }
+.cal-event-chip.reminder { background:rgba(232,93,74,0.12); color:var(--accent3); }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); z-index:200; display:none; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; animation:fadeIn 0.2s; }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.modal { background:var(--surface); border-radius:24px; padding:32px; width:500px; max-width:95vw; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes modalIn { from { transform:scale(0.92) translateY(20px); opacity:0; } to { transform:scale(1) translateY(0); opacity:1; } }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+.modal-title { font-family:'Unbounded',sans-serif; font-size:17px; font-weight:300; }
+.modal-close { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:none; cursor:pointer; font-size:16px; color:var(--text3); transition:all 0.15s; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:var(--surface2); color:var(--text); }
+.form-group { margin-bottom:16px; }
+.form-label { font-size:12px; color:var(--text2); margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px; }
+.form-input,.form-select,.form-textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-family:'Golos Text',sans-serif; font-size:14px; font-weight:300; color:var(--text); outline:none; transition:border-color 0.2s; }
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--accent2); }
+.form-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.priority-select { display:flex; gap:8px; }
+.priority-btn { flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); cursor:pointer; font-size:12px; font-family:'Golos Text',sans-serif; text-align:center; transition:all 0.15s; color:var(--text2); }
+.priority-btn.active-high { background:rgba(232,93,74,0.1); border-color:var(--accent3); color:var(--accent3); }
+.priority-btn.active-medium { background:rgba(255,180,0,0.1); border-color:#ffb400; color:#ffb400; }
+.priority-btn.active-low { background:rgba(46,204,143,0.1); border-color:var(--accent4); color:var(--accent4); }
+.modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+.tasks-columns { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.task-col { background:var(--surface2); border-radius:var(--radius); padding:16px; min-height:300px; }
+.task-col-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.task-col-label { display:flex; align-items:center; gap:8px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--text2); font-weight:500; }
+.col-indicator { width:8px; height:8px; border-radius:50%; }
+.col-indicator.todo { background:var(--accent2); }
+.col-indicator.doing { background:#ffb400; }
+.col-indicator.done { background:var(--accent4); }
+.task-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; transition:all 0.2s; }
+.task-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+.task-card.from-ai { border-left:3px solid #c8f064; }
+.task-card-title { font-size:14px; margin-bottom:8px; line-height:1.4; }
+.task-card-meta { display:flex; flex-wrap:wrap; gap:6px; }
+.chip { font-size:11px; padding:3px 8px; border-radius:6px; background:var(--surface2); color:var(--text3); }
+.chip.high { background:rgba(232,93,74,0.1); color:var(--accent3); }
+.chip.medium { background:rgba(255,180,0,0.1); color:#ffb400; }
+.chip.low { background:rgba(46,204,143,0.1); color:var(--accent4); }
+.chip.ai { background:rgba(200,240,100,0.15); color:#5a7a00; }
+.reminders-list { display:flex; flex-direction:column; gap:10px; }
+.reminder-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:16px; transition:all 0.2s; }
+.reminder-card:hover { box-shadow:var(--shadow); }
+.reminder-card.from-ai { border-left:3px solid #c8f064; }
+.reminder-card.sent { opacity:0.5; }
+.rem-time-block { text-align:center; min-width:52px; }
+.rem-time { font-family:'Unbounded',sans-serif; font-size:18px; font-weight:300; color:var(--text); }
+.rem-date { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+.rem-content { flex:1; }
+.rem-name { font-size:14px; margin-bottom:3px; }
+.rem-source { font-size:11px; color:var(--text3); }
+.rem-status { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text3); }
+.rem-status-dot { width:8px; height:8px; border-radius:50%; background:var(--text3); }
+.rem-status-dot.active { background:var(--accent4); animation:glow 1.5s infinite; }
+@keyframes glow { 0%,100% { box-shadow:none; } 50% { box-shadow:0 0 8px var(--accent4); } }
+.backlog-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+.backlog-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; cursor:pointer; transition:all 0.2s; }
+.backlog-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+.settings-panel { position:fixed; top:0; right:0; width:380px; height:100vh; background:var(--surface); border-left:1px solid var(--border); padding:32px; z-index:150; transform:translateX(100%); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); overflow-y:auto; }
+.settings-panel.open { transform:translateX(0); }
+.settings-title { font-family:'Unbounded',sans-serif; font-size:17px; font-weight:300; margin-bottom:28px; }
+.settings-section { margin-bottom:28px; }
+.settings-section-label { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); margin-bottom:12px; }
+.tg-setup { background:var(--surface2); border-radius:12px; padding:16px; font-size:13px; color:var(--text2); line-height:1.8; }
+.tg-setup b { color:var(--text); }
+.tg-setup code { background:var(--border); padding:2px 6px; border-radius:4px; font-size:11px; }
+.tg-setup a { color:var(--accent2); text-decoration:none; }
+.empty { text-align:center; padding:60px 20px; color:var(--text3); }
+.empty-icon { font-size:40px; margin-bottom:12px; opacity:0.4; }
+.empty-text { font-size:14px; }
+.notify { position:fixed; bottom:28px; right:28px; background:var(--accent); color:#fff; border-radius:14px; padding:14px 20px; font-size:13px; display:flex; align-items:center; gap:10px; transform:translateY(80px); opacity:0; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index:999; max-width:360px; box-shadow:var(--shadow-lg); }
+.notify.show { transform:translateY(0); opacity:1; }
+.spinner { width:14px; height:14px; border:2px solid rgba(0,0,0,0.2); border-top-color:#000; border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="sidebar">
+  <div class="logo-mark">а<span>.</span></div>
+  <div class="nav-btn active" onclick="nav('analyze',this)">✦<span class="nav-tooltip">Анализ встречи</span></div>
+  <div class="nav-btn" onclick="nav('calendar',this)">◻<span class="badge" id="calBadge" style="display:none">0</span><span class="nav-tooltip">Календарь</span></div>
+  <div class="nav-btn" onclick="nav('tasks',this)">◈<span class="badge" id="taskBadge" style="display:none">0</span><span class="nav-tooltip">Задачи</span></div>
+  <div class="nav-btn" onclick="nav('backlog',this)">◎<span class="badge" id="backlogBadge" style="display:none">0</span><span class="nav-tooltip">Бэклог</span></div>
+  <div class="nav-btn" onclick="nav('reminders',this)">◷<span class="badge" id="remBadge" style="display:none">0</span><span class="nav-tooltip">Напоминания</span></div>
+</nav>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Анализ встречи</div>
+    <div class="topbar-actions">
+      <div class="settings-btn" onclick="toggleSettings()">⚙ Настройки</div>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ANALYZE -->
+    <div class="page active" id="page-analyze">
+      <div class="analyze-hero">
+        <h2>Вставь текст встречи</h2>
+        <p>AI разберёт всё сам — задачи, встречи, напоминания</p>
+        <textarea class="analyze-textarea" id="meetingText" placeholder="Например: Обсудили запуск кампании. Света пришлёт презентацию до среды. Встреча с клиентом в пятницу в 16:00, ссылка zoom.us/j/123. Вася расскажет результаты в четверг..."></textarea>
+        <div class="analyze-footer">
+          <span class="analyze-hint">Чем подробнее текст — тем точнее результат</span>
+          <button class="btn-analyze" id="analyzeBtn" onclick="analyzeMeeting()">
+            <span id="analyzeBtnContent">Анализировать →</span>
+          </button>
+        </div>
+      </div>
+      <div class="results-row" id="resultsRow" style="display:none">
+        <div class="result-card" onclick="nav('calendar',document.querySelectorAll('.nav-btn')[1])">
+          <div class="result-icon cal">📅</div>
+          <div><div class="result-count" id="resCalCount">0</div><div class="result-label">встреч добавлено</div></div>
+        </div>
+        <div class="result-card" onclick="nav('tasks',document.querySelectorAll('.nav-btn')[2])">
+          <div class="result-icon task">✅</div>
+          <div><div class="result-count" id="resTaskCount">0</div><div class="result-label">задач создано</div></div>
+        </div>
+        <div class="result-card" onclick="nav('reminders',document.querySelectorAll('.nav-btn')[4])">
+          <div class="result-icon rem">🔔</div>
+          <div><div class="result-count" id="resRemCount">0</div><div class="result-label">напоминаний</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="page" id="page-calendar">
+      <div class="page-header">
+        <div><div class="page-title">Календарь</div><div class="page-sub">Встречи и события</div></div>
+        <button class="btn btn-primary" onclick="openModal('event')">+ Добавить встречу</button>
+      </div>
+      <div class="cal-header">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+          <div class="cal-month-label" id="calMonthLabel"></div>
+          <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="cal-body">
+        <div class="cal-days-header">
+          <div class="cal-day-name">Пн</div><div class="cal-day-name">Вт</div><div class="cal-day-name">Ср</div>
+          <div class="cal-day-name">Чт</div><div class="cal-day-name">Пт</div><div class="cal-day-name">Сб</div><div class="cal-day-name">Вс</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="page" id="page-tasks">
+      <div class="page-header">
+        <div><div class="page-title">Задачи</div><div class="page-sub">Рабочие задачи и поручения</div></div>
+        <button class="btn btn-primary" onclick="openModal('task')">+ Добавить задачу</button>
+      </div>
+      <div class="tasks-columns">
+        <div class="task-col">
+          <div class="task-col-header"><div class="task-col-label"><div class="col-indicator todo"></div>К выполнению</div><span style="font-size:12px;color:var(--text3)" id="todoCount">0</span></div>
+          <div id="col-todo"></div>
+        </div>
+        <div class="task-col">
+          <div class="task-col-header"><div class="task-col-label"><div class="col-indicator doing"></div>В работе</div><span style="font-size:12px;color:var(--text3)" id="doingCount">0</span></div>
+          <div id="col-doing"></div>
+        </div>
+        <div class="task-col">
+          <div class="task-col-header"><div class="task-col-label"><div class="col-indicator done"></div>Готово</div><span style="font-size:12px;color:var(--text3)" id="doneCount">0</span></div>
+          <div id="col-done"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACKLOG -->
+    <div class="page" id="page-backlog">
+      <div class="page-header">
+        <div><div class="page-title">Бэклог</div><div class="page-sub">Идеи без срока — не потеряются</div></div>
+        <button class="btn btn-primary" onclick="openModal('backlog')">+ Добавить</button>
+      </div>
+      <div class="backlog-grid" id="backlogGrid"></div>
+    </div>
+
+    <!-- REMINDERS -->
+    <div class="page" id="page-reminders">
+      <div class="page-header">
+        <div><div class="page-title">Напоминания</div><div class="page-sub">Приходят в Telegram в нужное время</div></div>
+        <button class="btn btn-primary" onclick="openModal('reminder')">+ Добавить</button>
+      </div>
+      <div class="reminders-list" id="remindersList"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings-panel" id="settingsPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+    <div class="settings-title">Настройки</div>
+    <button class="modal-close" onclick="toggleSettings()">✕</button>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">Telegram — мой Chat ID</div>
+    <div class="form-group">
+      <label class="form-label">Твой Chat ID</label>
+      <input class="form-input" id="tgChatInput" placeholder="123456789" oninput="saveSettings()">
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="testTelegram()">Проверить связь</button>
+    <div class="tg-setup" style="margin-top:12px">
+      <b>Как узнать свой Chat ID:</b><br>
+      1. Найди <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram<br>
+      2. Нажми Start — бот пришлёт твой ID<br>
+      3. Вставь этот номер выше<br><br>
+      Затем напиши боту <a href="https://t.me/YOUR_BOT" target="_blank" id="botLink">нашему боту</a> любое сообщение — иначе он не сможет тебе писать.
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">Данные</div>
+    <button class="btn btn-secondary btn-sm" onclick="clearAll()">Очистить всё</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<!-- NOTIFY -->
+<div class="notify" id="notify">
+  <span id="notifyIcon"></span><span id="notifyText"></span>
+</div>
+
+<script>
+const state = { events:[], tasks:[], backlog:[], reminders:[], currentMonth:new Date().getMonth(), currentYear:new Date().getFullYear() };
+const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+function saveSettings() {
+  localStorage.setItem('tgChat', document.getElementById('tgChatInput').value);
+}
+function loadSettings() {
+  document.getElementById('tgChatInput').value = localStorage.getItem('tgChat') || '';
+}
+function getTgChat() { return localStorage.getItem('tgChat') || ''; }
+function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+
+const pageTitles = { analyze:'Анализ встречи', calendar:'Календарь', tasks:'Задачи', backlog:'Бэклог', reminders:'Напоминания' };
+function nav(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topbarTitle').textContent = pageTitles[page];
+  if (page==='calendar') renderCalendar();
+  if (page==='tasks') renderTasks();
+  if (page==='backlog') renderBacklog();
+  if (page==='reminders') renderReminders();
+}
+
+async function analyzeMeeting() {
+  const text = document.getElementById('meetingText').value.trim();
+  if (!text) { showNotify('⚠️','Вставь текст встречи'); return; }
+  const btn = document.getElementById('analyzeBtn');
+  const content = document.getElementById('analyzeBtnContent');
+  btn.disabled = true;
+  content.innerHTML = '<div class="spinner"></div> Анализирую...';
+  try {
+    const res = await fetch('/api/analyze', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text })
+    });
+    const parsed = await res.json();
+    if (parsed.error) { showNotify('❌', parsed.error); return; }
+    state.events.push(...(parsed.events||[]));
+    state.tasks.push(...(parsed.tasks||[]));
+    state.backlog.push(...(parsed.backlog||[]));
+    state.reminders.push(...(parsed.reminders||[]));
+    saveData(); updateBadges();
+    document.getElementById('resCalCount').textContent = parsed.events?.length||0;
+    document.getElementById('resTaskCount').textContent = parsed.tasks?.length||0;
+    document.getElementById('resRemCount').textContent = parsed.reminders?.length||0;
+    document.getElementById('resultsRow').style.display = 'grid';
+    scheduleReminders();
+    showNotify('✦',`Готово: ${parsed.tasks?.length||0} задач, ${parsed.reminders?.length||0} напомин., ${parsed.events?.length||0} встреч`);
+  } catch(e) { showNotify('❌','Ошибка: '+e.message);
+  } finally { btn.disabled=false; content.textContent='Анализировать →'; }
+}
+
+function changeMonth(dir) {
+  state.currentMonth+=dir;
+  if (state.currentMonth>11){state.currentMonth=0;state.currentYear++;}
+  if (state.currentMonth<0){state.currentMonth=11;state.currentYear--;}
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const {currentMonth:m, currentYear:y} = state;
+  document.getElementById('calMonthLabel').textContent = `${MONTHS[m]} ${y}`;
+  const first = new Date(y,m,1);
+  let startDay = first.getDay()-1; if(startDay<0) startDay=6;
+  const total = new Date(y,m+1,0).getDate();
+  const prevTotal = new Date(y,m,0).getDate();
+  const today = new Date();
+  let html='';
+  for(let i=startDay-1;i>=0;i--) html+=`<div class="cal-cell other-month"><div class="cal-date">${prevTotal-i}</div></div>`;
+  for(let d=1;d<=total;d++){
+    const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear();
+    const dayEvents=state.events.filter(e=>e.date===dateStr);
+    const dayRems=state.reminders.filter(r=>r.date===dateStr);
+    let chips='';
+    dayEvents.slice(0,2).forEach(e=>{ chips+=`<div class="cal-event-chip meeting" onclick="viewEvent('${e.id}',event)">${e.time?e.time+' ':''}${e.title}</div>`; });
+    dayRems.slice(0,1).forEach(r=>{ chips+=`<div class="cal-event-chip reminder">🔔 ${r.title}</div>`; });
+    html+=`<div class="cal-cell ${isToday?'today':''}" onclick="calDayClick('${dateStr}')"><div class="cal-date">${d}</div>${chips}</div>`;
+  }
+  const cells=startDay+total;
+  const remaining=Math.ceil(cells/7)*7-cells;
+  for(let d=1;d<=remaining;d++) html+=`<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
+  document.getElementById('calGrid').innerHTML=html;
+}
+
+function calDayClick(dateStr) { openModal('event',{date:dateStr}); }
+
+function viewEvent(id,e) {
+  e.stopPropagation();
+  const ev=state.events.find(x=>x.id===id); if(!ev) return;
+  document.getElementById('modalBox').innerHTML=`
+    <div class="modal-header"><div class="modal-title">${ev.title}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        ${ev.date?`<div class="chip">📅 ${formatDate(ev.date)}</div>`:''}
+        ${ev.time?`<div class="chip">🕐 ${ev.time}${ev.endTime?' – '+ev.endTime:''}</div>`:''}
+        ${ev.participants?`<div class="chip">👥 ${ev.participants}</div>`:''}
+      </div>
+      ${ev.link?`<a href="${ev.link}" target="_blank" style="color:var(--accent2);font-size:13px;text-decoration:none">🔗 Ссылка на встречу</a>`:''}
+      ${ev.summary?`<div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px">Резюме встречи</div><div style="font-size:13px;line-height:1.7;color:var(--text2)">${ev.summary}</div></div>`:''}
+      ${ev.notes?`<div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Заметки</div><div style="font-size:13px;line-height:1.7;color:var(--text2)">${ev.notes}</div></div>`:''}
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="deleteItem('events','${ev.id}')">Удалить</button><button class="btn btn-primary" onclick="closeModal()">Закрыть</button></div>`;
+  openModalBox();
+}
+
+function renderTasks() {
+  const cols={todo:[],doing:[],done:[]};
+  state.tasks.forEach(t=>{ if(cols[t.status]) cols[t.status].push(t); });
+  ['todo','doing','done'].forEach(col=>{
+    const el=document.getElementById('col-'+col);
+    document.getElementById(col+'Count').textContent=cols[col].length;
+    if(!cols[col].length){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Пусто</div>'; return; }
+    el.innerHTML=cols[col].map(t=>`
+      <div class="task-card ${t.fromAI?'from-ai':''}" onclick="viewTask('${t.id}')">
+        <div class="task-card-title">${t.title}</div>
+        <div class="task-card-meta">
+          ${t.priority?`<span class="chip ${t.priority}">${priorityLabel(t.priority)}</span>`:''}
+          ${t.deadline?`<span class="chip">📅 ${formatDate(t.deadline)}</span>`:''}
+          ${t.assignee?`<span class="chip">👤 ${t.assignee}</span>`:''}
+          ${t.fromAI?`<span class="chip ai">✦ AI</span>`:''}
+        </div>
+      </div>`).join('');
+  });
+  updateBadges();
+}
+
+function viewTask(id) {
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  const sl=['todo','doing','done'], labels={todo:'К выполнению',doing:'В работе',done:'Готово'};
+  document.getElementById('modalBox').innerHTML=`
+    <div class="modal-header"><div class="modal-title">Задача</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="form-group"><div style="font-size:16px;font-weight:400;margin-bottom:12px">${t.title}</div>${t.description?`<div style="font-size:13px;color:var(--text2);line-height:1.6">${t.description}</div>`:''}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      ${t.priority?`<span class="chip ${t.priority}">${priorityLabel(t.priority)}</span>`:''}
+      ${t.deadline?`<span class="chip">📅 ${formatDate(t.deadline)}</span>`:''}
+      ${t.assignee?`<span class="chip">👤 ${t.assignee}</span>`:''}
+    </div>
+    <div class="form-group">
+      <label class="form-label">Статус</label>
+      <div style="display:flex;gap:8px">
+        ${sl.map(s=>`<button class="priority-btn ${t.status===s?'active-high':''}" onclick="updateTaskStatus('${t.id}','${s}',this)">${labels[s]}</button>`).join('')}
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="deleteItem('tasks','${t.id}')">Удалить</button><button class="btn btn-primary" onclick="closeModal()">Закрыть</button></div>`;
+  openModalBox();
+}
+
+function updateTaskStatus(id,status,btn) {
+  const t=state.tasks.find(x=>x.id===id);
+  if(t){t.status=status;saveData();renderTasks();}
+  btn.closest('.modal').querySelectorAll('.priority-btn').forEach(b=>b.className='priority-btn');
+  btn.classList.add('active-high');
+  showNotify('✓','Статус обновлён');
+}
+
+function renderBacklog() {
+  const el=document.getElementById('backlogGrid');
+  if(!state.backlog.length){ el.innerHTML='<div class="empty"><div class="empty-icon">◎</div><div class="empty-text">Идеи без срока появятся здесь</div></div>'; return; }
+  el.innerHTML=state.backlog.map(b=>`
+    <div class="backlog-card">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">${b.category||'прочее'}</div>
+      <div style="font-size:14px;margin-bottom:8px">${b.title}</div>
+      ${b.notes?`<div style="font-size:12px;color:var(--text2)">${b.notes}</div>`:''}
+    </div>`).join('');
+  updateBadges();
+}
+
+function renderReminders() {
+  const el=document.getElementById('remindersList');
+  if(!state.reminders.length){ el.innerHTML='<div class="empty"><div class="empty-icon">◷</div><div class="empty-text">Напоминания появятся здесь</div></div>'; return; }
+  const sorted=[...state.reminders].sort((a,b)=>new Date(a.date+'T'+(a.time||'00:00'))-new Date(b.date+'T'+(b.time||'00:00')));
+  el.innerHTML=sorted.map(r=>`
+    <div class="reminder-card ${r.fromAI?'from-ai':''} ${r.sent?'sent':''}">
+      <div class="rem-time-block"><div class="rem-time">${r.time||'--:--'}</div><div class="rem-date">${r.date?formatDate(r.date):''}</div></div>
+      <div class="rem-content"><div class="rem-name">${r.title}</div><div class="rem-source">${r.fromAI?'✦ из встречи':'вручную'}${r.context?' · '+r.context:''}</div></div>
+      <div class="rem-status"><div class="rem-status-dot ${r.sent?'':'active'}"></div>${r.sent?'отправлено':'ожидает'}</div>
+    </div>`).join('');
+  updateBadges();
+}
+
+async function sendTelegram(chatId, text) {
+  try {
+    const res = await fetch('/api/telegram', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chatId, text })
+    });
+    const data = await res.json();
+    return data.ok;
+  } catch { return false; }
+}
+
+async function testTelegram() {
+  const chatId = getTgChat();
+  if (!chatId) { showNotify('⚠️','Введи свой Chat ID'); return; }
+  const ok = await sendTelegram(chatId, '✅ Ассистент подключён! Напоминания будут приходить сюда.');
+  showNotify(ok?'✅':'❌', ok?'Telegram работает!':'Проверь Chat ID — и напиши боту первым');
+}
+
+function scheduleReminders() {
+  state.reminders.forEach(r=>{
+    if(r.sent) return;
+    const fireAt=new Date(r.date+'T'+(r.time||'09:00'));
+    const delay=fireAt-new Date();
+    if(delay>0 && delay<24*60*60*1000){
+      setTimeout(async()=>{
+        const chatId=getTgChat();
+        if(!chatId) return;
+        const text=`🔔 <b>Напоминание</b>\n\n${r.title}${r.context?'\n\n'+r.context:''}`;
+        const ok=await sendTelegram(chatId,text);
+        if(ok){r.sent=true;saveData();renderReminders();showNotify('📨','Напоминание отправлено в Telegram');}
+      },delay);
+    }
+  });
+}
+
+let selectedPriority='medium';
+function setPriority(p,btn) {
+  selectedPriority=p;
+  document.querySelectorAll('.priority-btn').forEach(b=>b.className='priority-btn');
+  btn.classList.add('active-'+p);
+}
+
+function openModal(type, prefill={}) {
+  const box=document.getElementById('modalBox');
+  if(type==='event'){
+    box.innerHTML=`
+      <div class="modal-header"><div class="modal-title">Новая встреча</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <div class="form-group"><label class="form-label">Название *</label><input class="form-input" id="f_title" placeholder="Встреча с командой"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Дата *</label><input class="form-input" id="f_date" type="date" value="${prefill.date||today()}"></div>
+        <div class="form-group"><label class="form-label">Время</label><input class="form-input" id="f_time" type="time"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Участники</label><input class="form-input" id="f_participants" placeholder="Света, Вася"></div>
+      <div class="form-group"><label class="form-label">Ссылка</label><input class="form-input" id="f_link" placeholder="zoom.us/j/..."></div>
+      <div class="form-group"><label class="form-label">Заметки</label><textarea class="form-textarea" id="f_notes" placeholder="Повестка..."></textarea></div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-primary" onclick="saveEvent()">Добавить</button></div>`;
+  }
+  if(type==='task'){
+    selectedPriority='medium';
+    box.innerHTML=`
+      <div class="modal-header"><div class="modal-title">Новая задача</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <div class="form-group"><label class="form-label">Задача *</label><input class="form-input" id="f_title" placeholder="Что нужно сделать"></div>
+      <div class="form-group"><label class="form-label">Описание</label><textarea class="form-textarea" id="f_desc" placeholder="Детали..."></textarea></div>
+      <div class="form-group"><label class="form-label">Приоритет</label>
+        <div class="priority-select">
+          <button class="priority-btn" onclick="setPriority('high',this)">🔴 Высокий</button>
+          <button class="priority-btn active-medium" onclick="setPriority('medium',this)">🟡 Средний</button>
+          <button class="priority-btn" onclick="setPriority('low',this)">🟢 Низкий</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Дедлайн</label><input class="form-input" id="f_deadline" type="date"></div>
+        <div class="form-group"><label class="form-label">Ответственный</label><input class="form-input" id="f_assignee" placeholder="Имя"></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-primary" onclick="saveTask()">Добавить</button></div>`;
+  }
+  if(type==='backlog'){
+    box.innerHTML=`
+      <div class="modal-header"><div class="modal-title">В бэклог</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <div class="form-group"><label class="form-label">Идея *</label><input class="form-input" id="f_title" placeholder="Что-то на потом"></div>
+      <div class="form-group"><label class="form-label">Категория</label><select class="form-select" id="f_cat"><option value="работа">Работа</option><option value="личное">Личное</option><option value="прочее">Прочее</option></select></div>
+      <div class="form-group"><label class="form-label">Заметки</label><textarea class="form-textarea" id="f_notes" placeholder="Детали..."></textarea></div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-primary" onclick="saveBacklog()">Добавить</button></div>`;
+  }
+  if(type==='reminder'){
+    box.innerHTML=`
+      <div class="modal-header"><div class="modal-title">Новое напоминание</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <div class="form-group"><label class="form-label">О чём напомнить *</label><input class="form-input" id="f_title" placeholder="Позвонить Свете..."></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Дата *</label><input class="form-input" id="f_date" type="date" value="${today()}"></div>
+        <div class="form-group"><label class="form-label">Время *</label><input class="form-input" id="f_time" type="time" value="09:00"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Контекст</label><input class="form-input" id="f_context" placeholder="Детали"></div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-primary" onclick="saveReminder()">Добавить</button></div>`;
+  }
+  openModalBox();
+  setTimeout(()=>box.querySelector('input,textarea')?.focus(),100);
+}
+
+function openModalBox(){ document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e){ if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+
+function saveEvent(){
+  const title=document.getElementById('f_title').value.trim();
+  if(!title){showNotify('⚠️','Укажи название');return;}
+  state.events.push({id:uid(),title,date:document.getElementById('f_date').value,time:document.getElementById('f_time').value,participants:document.getElementById('f_participants').value,link:document.getElementById('f_link').value,notes:document.getElementById('f_notes').value,summary:null});
+  saveData();updateBadges();renderCalendar();closeModal();showNotify('📅','Встреча добавлена');
+}
+function saveTask(){
+  const title=document.getElementById('f_title').value.trim();
+  if(!title){showNotify('⚠️','Укажи задачу');return;}
+  state.tasks.push({id:uid(),title,description:document.getElementById('f_desc').value,priority:selectedPriority,deadline:document.getElementById('f_deadline').value,assignee:document.getElementById('f_assignee').value,status:'todo',fromAI:false});
+  saveData();updateBadges();renderTasks();closeModal();showNotify('✅','Задача добавлена');
+}
+function saveBacklog(){
+  const title=document.getElementById('f_title').value.trim();
+  if(!title){showNotify('⚠️','Укажи идею');return;}
+  state.backlog.push({id:uid(),title,category:document.getElementById('f_cat').value,notes:document.getElementById('f_notes').value});
+  saveData();updateBadges();renderBacklog();closeModal();showNotify('◎','Добавлено в бэклог');
+}
+function saveReminder(){
+  const title=document.getElementById('f_title').value.trim();
+  if(!title){showNotify('⚠️','Укажи напоминание');return;}
+  const rem={id:uid(),title,date:document.getElementById('f_date').value,time:document.getElementById('f_time').value,context:document.getElementById('f_context').value,fromAI:false,sent:false};
+  state.reminders.push(rem);saveData();updateBadges();renderReminders();scheduleReminders();closeModal();showNotify('🔔','Напоминание установлено');
+}
+function deleteItem(collection,id){
+  if(!confirm('Удалить?')) return;
+  state[collection]=state[collection].filter(x=>x.id!==id);
+  saveData();updateBadges();closeModal();
+  if(collection==='events') renderCalendar();
+  if(collection==='tasks') renderTasks();
+  if(collection==='backlog') renderBacklog();
+  if(collection==='reminders') renderReminders();
+  showNotify('🗑','Удалено');
+}
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function formatDate(d){ if(!d) return ''; return new Date(d+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short'}); }
+function priorityLabel(p){ return {high:'🔴 Высокий',medium:'🟡 Средний',low:'🟢 Низкий'}[p]||p; }
+
+function updateBadges(){
+  [['calBadge',state.events.length],['taskBadge',state.tasks.filter(t=>t.status!=='done').length],['backlogBadge',state.backlog.length],['remBadge',state.reminders.filter(r=>!r.sent).length]]
+  .forEach(([id,count])=>{ const el=document.getElementById(id); el.textContent=count; el.style.display=count>0?'flex':'none'; });
+}
+function showNotify(icon,text){
+  document.getElementById('notifyIcon').textContent=icon;
+  document.getElementById('notifyText').textContent=text;
+  const el=document.getElementById('notify');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3500);
+}
+function saveData(){ localStorage.setItem('assistData',JSON.stringify({events:state.events,tasks:state.tasks,backlog:state.backlog,reminders:state.reminders})); }
+function loadData(){
+  try{ const d=JSON.parse(localStorage.getItem('assistData')||'{}'); state.events=d.events||[];state.tasks=d.tasks||[];state.backlog=d.backlog||[];state.reminders=d.reminders||[]; }catch{}
+}
+function clearAll(){ if(!confirm('Удалить все данные?')) return; state.events=[];state.tasks=[];state.backlog=[];state.reminders=[]; saveData();updateBadges();showNotify('🗑','Очищено'); }
+
+loadData(); loadSettings(); updateBadges(); renderCalendar(); scheduleReminders();
+</script>
+</body>
+</html>
