@@ -24,7 +24,7 @@
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-serif; font-weight:300; min-height:100vh; overflow-x:hidden; }
-.app { display:grid; grid-template-columns:72px 1fr; min-height:100vh; }
+.app { display:block; min-height:100vh; }
 .sidebar { background:var(--accent); display:flex; flex-direction:column; align-items:center; padding:20px 0; gap:4px; position:fixed; top:0; left:0; width:72px; height:100vh; z-index:100; }
 .logo-mark { font-family:'Unbounded',sans-serif; font-size:18px; font-weight:400; color:#fff; margin-bottom:24px; letter-spacing:-1px; }
 .logo-mark span { color:#c8f064; }
@@ -189,7 +189,7 @@ body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-se
     </div>
   </div>
   <div class="content">
-
+ 
     <!-- ANALYZE -->
     <div class="page active" id="page-analyze">
       <div class="analyze-hero">
@@ -218,7 +218,7 @@ body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-se
         </div>
       </div>
     </div>
-
+ 
     <!-- CALENDAR -->
     <div class="page" id="page-calendar">
       <div class="page-header">
@@ -240,7 +240,7 @@ body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-se
         <div class="cal-grid" id="calGrid"></div>
       </div>
     </div>
-
+ 
     <!-- TASKS -->
     <div class="page" id="page-tasks">
       <div class="page-header">
@@ -262,7 +262,7 @@ body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-se
         </div>
       </div>
     </div>
-
+ 
     <!-- BACKLOG -->
     <div class="page" id="page-backlog">
       <div class="page-header">
@@ -271,7 +271,7 @@ body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-se
       </div>
       <div class="backlog-grid" id="backlogGrid"></div>
     </div>
-
+ 
     <!-- REMINDERS -->
     <div class="page" id="page-reminders">
       <div class="page-header">
@@ -280,11 +280,11 @@ body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-se
       </div>
       <div class="reminders-list" id="remindersList"></div>
     </div>
-
+ 
   </div>
 </div>
 </div>
-
+ 
 <!-- SETTINGS -->
 <div class="settings-panel" id="settingsPanel">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
@@ -311,21 +311,21 @@ body { background:var(--bg); color:var(--text); font-family:'Golos Text',sans-se
     <button class="btn btn-secondary btn-sm" onclick="clearAll()">Очистить всё</button>
   </div>
 </div>
-
+ 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
   <div class="modal" id="modalBox"></div>
 </div>
-
+ 
 <!-- NOTIFY -->
 <div class="notify" id="notify">
   <span id="notifyIcon"></span><span id="notifyText"></span>
 </div>
-
+ 
 <script>
 const state = { events:[], tasks:[], backlog:[], reminders:[], currentMonth:new Date().getMonth(), currentYear:new Date().getFullYear() };
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-
+ 
 function saveSettings() {
   localStorage.setItem('tgChat', document.getElementById('tgChatInput').value);
 }
@@ -334,7 +334,7 @@ function loadSettings() {
 }
 function getTgChat() { return localStorage.getItem('tgChat') || ''; }
 function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
-
+ 
 const pageTitles = { analyze:'Анализ встречи', calendar:'Календарь', tasks:'Задачи', backlog:'Бэклог', reminders:'Напоминания' };
 function nav(page, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -347,7 +347,7 @@ function nav(page, btn) {
   if (page==='backlog') renderBacklog();
   if (page==='reminders') renderReminders();
 }
-
+ 
 async function analyzeMeeting() {
   const text = document.getElementById('meetingText').value.trim();
   if (!text) { showNotify('⚠️','Вставь текст встречи'); return; }
@@ -377,14 +377,14 @@ async function analyzeMeeting() {
   } catch(e) { showNotify('❌','Ошибка: '+e.message);
   } finally { btn.disabled=false; content.textContent='Анализировать →'; }
 }
-
+ 
 function changeMonth(dir) {
   state.currentMonth+=dir;
   if (state.currentMonth>11){state.currentMonth=0;state.currentYear++;}
   if (state.currentMonth<0){state.currentMonth=11;state.currentYear--;}
   renderCalendar();
 }
-
+ 
 function renderCalendar() {
   const {currentMonth:m, currentYear:y} = state;
   document.getElementById('calMonthLabel').textContent = `${MONTHS[m]} ${y}`;
@@ -410,9 +410,9 @@ function renderCalendar() {
   for(let d=1;d<=remaining;d++) html+=`<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
   document.getElementById('calGrid').innerHTML=html;
 }
-
+ 
 function calDayClick(dateStr) { openModal('event',{date:dateStr}); }
-
+ 
 function viewEvent(id,e) {
   e.stopPropagation();
   const ev=state.events.find(x=>x.id===id); if(!ev) return;
@@ -431,7 +431,7 @@ function viewEvent(id,e) {
     <div class="modal-footer"><button class="btn btn-secondary" onclick="deleteItem('events','${ev.id}')">Удалить</button><button class="btn btn-primary" onclick="closeModal()">Закрыть</button></div>`;
   openModalBox();
 }
-
+ 
 function renderTasks() {
   const cols={todo:[],doing:[],done:[]};
   state.tasks.forEach(t=>{ if(cols[t.status]) cols[t.status].push(t); });
@@ -452,7 +452,7 @@ function renderTasks() {
   });
   updateBadges();
 }
-
+ 
 function viewTask(id) {
   const t=state.tasks.find(x=>x.id===id); if(!t) return;
   const sl=['todo','doing','done'], labels={todo:'К выполнению',doing:'В работе',done:'Готово'};
@@ -473,7 +473,7 @@ function viewTask(id) {
     <div class="modal-footer"><button class="btn btn-secondary" onclick="deleteItem('tasks','${t.id}')">Удалить</button><button class="btn btn-primary" onclick="closeModal()">Закрыть</button></div>`;
   openModalBox();
 }
-
+ 
 function updateTaskStatus(id,status,btn) {
   const t=state.tasks.find(x=>x.id===id);
   if(t){t.status=status;saveData();renderTasks();}
@@ -481,7 +481,7 @@ function updateTaskStatus(id,status,btn) {
   btn.classList.add('active-high');
   showNotify('✓','Статус обновлён');
 }
-
+ 
 function renderBacklog() {
   const el=document.getElementById('backlogGrid');
   if(!state.backlog.length){ el.innerHTML='<div class="empty"><div class="empty-icon">◎</div><div class="empty-text">Идеи без срока появятся здесь</div></div>'; return; }
@@ -493,7 +493,7 @@ function renderBacklog() {
     </div>`).join('');
   updateBadges();
 }
-
+ 
 function renderReminders() {
   const el=document.getElementById('remindersList');
   if(!state.reminders.length){ el.innerHTML='<div class="empty"><div class="empty-icon">◷</div><div class="empty-text">Напоминания появятся здесь</div></div>'; return; }
@@ -506,7 +506,7 @@ function renderReminders() {
     </div>`).join('');
   updateBadges();
 }
-
+ 
 async function sendTelegram(chatId, text) {
   try {
     const res = await fetch('/api/telegram', {
@@ -518,14 +518,14 @@ async function sendTelegram(chatId, text) {
     return data.ok;
   } catch { return false; }
 }
-
+ 
 async function testTelegram() {
   const chatId = getTgChat();
   if (!chatId) { showNotify('⚠️','Введи свой Chat ID'); return; }
   const ok = await sendTelegram(chatId, '✅ Ассистент подключён! Напоминания будут приходить сюда.');
   showNotify(ok?'✅':'❌', ok?'Telegram работает!':'Проверь Chat ID — и напиши боту первым');
 }
-
+ 
 function scheduleReminders() {
   state.reminders.forEach(r=>{
     if(r.sent) return;
@@ -542,14 +542,14 @@ function scheduleReminders() {
     }
   });
 }
-
+ 
 let selectedPriority='medium';
 function setPriority(p,btn) {
   selectedPriority=p;
   document.querySelectorAll('.priority-btn').forEach(b=>b.className='priority-btn');
   btn.classList.add('active-'+p);
 }
-
+ 
 function openModal(type, prefill={}) {
   const box=document.getElementById('modalBox');
   if(type==='event'){
@@ -606,11 +606,11 @@ function openModal(type, prefill={}) {
   openModalBox();
   setTimeout(()=>box.querySelector('input,textarea')?.focus(),100);
 }
-
+ 
 function openModalBox(){ document.getElementById('modalOverlay').classList.add('open'); }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
 function closeModalOutside(e){ if(e.target===document.getElementById('modalOverlay')) closeModal(); }
-
+ 
 function saveEvent(){
   const title=document.getElementById('f_title').value.trim();
   if(!title){showNotify('⚠️','Укажи название');return;}
@@ -645,12 +645,12 @@ function deleteItem(collection,id){
   if(collection==='reminders') renderReminders();
   showNotify('🗑','Удалено');
 }
-
+ 
 function uid(){ return Math.random().toString(36).slice(2,10); }
 function today(){ return new Date().toISOString().split('T')[0]; }
 function formatDate(d){ if(!d) return ''; return new Date(d+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short'}); }
 function priorityLabel(p){ return {high:'🔴 Высокий',medium:'🟡 Средний',low:'🟢 Низкий'}[p]||p; }
-
+ 
 function updateBadges(){
   [['calBadge',state.events.length],['taskBadge',state.tasks.filter(t=>t.status!=='done').length],['backlogBadge',state.backlog.length],['remBadge',state.reminders.filter(r=>!r.sent).length]]
   .forEach(([id,count])=>{ const el=document.getElementById(id); el.textContent=count; el.style.display=count>0?'flex':'none'; });
@@ -667,8 +667,9 @@ function loadData(){
   try{ const d=JSON.parse(localStorage.getItem('assistData')||'{}'); state.events=d.events||[];state.tasks=d.tasks||[];state.backlog=d.backlog||[];state.reminders=d.reminders||[]; }catch{}
 }
 function clearAll(){ if(!confirm('Удалить все данные?')) return; state.events=[];state.tasks=[];state.backlog=[];state.reminders=[]; saveData();updateBadges();showNotify('🗑','Очищено'); }
-
+ 
 loadData(); loadSettings(); updateBadges(); renderCalendar(); scheduleReminders();
 </script>
 </body>
 </html>
+ 
