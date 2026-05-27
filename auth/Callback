@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Вход...</title></head>
+<body>
+<script>
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.replace('#',''));
+    const token = params.get('access_token');
+    if (token) localStorage.setItem('sb_token', token);
+  }
+  window.location.href = '/';
+</script>
+</body>
+</html>
+ 
