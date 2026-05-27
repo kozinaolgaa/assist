@@ -1030,7 +1030,7 @@ async function checkAuth() {
   if (hash.includes('access_token')) {
     const params = new URLSearchParams(hash.replace('#',''));
     const token = params.get('access_token');
-    if (token) { localStorage.setItem('sb_token', token); window.history.replaceState({},'',' /'); }
+    if (token) { localStorage.setItem('sb_token', token); window.history.replaceState({},'','/'); }
   }
   const token = localStorage.getItem('sb_token');
   if (!token) { showLoginScreen(); return; }
