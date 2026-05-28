@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     if (action === 'google') {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${process.env.APP_URL}/auth/callback` }
+        options: { redirectTo: `https://assist-plum.vercel.app` }
       });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ url: data.url });
